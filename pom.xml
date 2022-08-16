@@ -68,8 +68,90 @@
                 <artifactId>maven-site-plugin</artifactId>
                 <version>3.7.1</version>
             </plugin>
+
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>4.9.10</version>
+                <executions>
+                    <execution>
+                        <id>get-the-git-infos</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
+                    </generateGitPropertiesFilename>
+                    <includeOnlyProperties>
+                        <includeOnlyProperty>^git.build.(time|version)$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.commit.id.(abbrev|full)$</includeOnlyProperty>
+                    </includeOnlyProperties>
+                    <commitIdGenerationMode>full</commitIdGenerationMode>
+                </configuration>
+            </plugin>
+
         </plugins>
 
 
     </build>
+
+    <profiles>
+
+        <profile>
+            <id>one.profile</id>
+            <activation>
+                <property>
+                    <name>prop1</name>
+                    <value>one</value>
+                </property>
+            </activation>
+            <properties>
+                <my.property>value from one.profile</my.property>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>two.profile</id>
+            <activation>
+                <!-- 当存在多个条件时，他们之间是与的关系，需要同时满足才能激活该 profile -->
+                <property>
+                    <name>prop2</name>
+                    <value>two</value>
+                </property>
+                <!-- 在处理 activation 激活条件时, 无法解析 ${project.basedir} 变量，需要使用 ${basedir} 替代 -->
+                <!-- 当 ${project.basedir} 不能解析时，其值为 empty string ，这里的条件就找文件 /.git,一般情况永远不会成功的 -->
+                <file>
+                    <exists>${project.basedir}/.git</exists>
+                </file>
+            </activation>
+            <properties>
+                <my.property>value from two.profile</my.property>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>three.profile</id>
+            <activation>
+                <property>
+                    <name>prop3</name>
+                    <value>three</value>
+                </property>
+                <!-- 在处理 activation 激活条件时, file 中的 ${basedir} 是可以解析的，其计算时会独立于每个具体的子工程进行重新解析的 -->
+                <!-- 比如在 MiscellaneousTest-asm 中 ${basedir} 解析时，其值为 MiscellaneousTest-asm ，这里的条件就找文件 MiscellaneousTest-asm/.git, 该文件存在 -->
+                <!-- 比如在 asm-all 中 ${basedir} 解析时，其值为 MiscellaneousTest-asm/asm-all ，这里的条件就找文件 MiscellaneousTest-asm/asm-all/.git,该文件不存在 -->
+                <file>
+                    <exists>${basedir}/.git</exists>
+                </file>
+            </activation>
+            <properties>
+                <my.property>value from three.profile</my.property>
+            </properties>
+        </profile>
+
+    </profiles>
+
 </project>
