@@ -41,3 +41,5 @@ tomcat.*/
 !script/ext/**/*.jar
 !springmvc/web/external/
 !springmvc/web/external/**/*.*
+
+# develop v1
